@@ -10,7 +10,7 @@ class Auditable {
     Model.audit = function() {
       return {
         create: createWithAudit(self.ctx).bind(this),
-        create: createWithAuditCron().bind(this)
+        createCron: createWithAuditCron().bind(this)
       };
     };
 
@@ -20,7 +20,7 @@ class Auditable {
         update: updateWithAudit(self.ctx).bind(this),
         updateCron: updateWithAuditCron().bind(this),
         delete: deleteWithAudit(self.ctx).bind(this),
-        deleteCron: deleteWithAudit().bind(this)
+        deleteCron: deleteWithAuditCron().bind(this)
       };
     };
   }
