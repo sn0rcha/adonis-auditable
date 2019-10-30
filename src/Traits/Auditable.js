@@ -9,15 +9,27 @@ class Auditable {
     const self = this;
     Model.audit = function() {
       return {
-        create: createWithAudit(self.ctx).bind(this)
+        create: createWithAudit(
+          self.ctx
+            ? self.ctx
+            : { request: { url: "cron" }, auth: { user: { id: 1 } } }
+        ).bind(this)
       };
     };
 
     // update/delete methods
     Model.prototype.audit = function() {
       return {
-        update: updateWithAudit(self.ctx).bind(this),
-        delete: deleteWithAudit(self.ctx).bind(this)
+        update: updateWithAudit(
+          self.ctx
+            ? self.ctx
+            : { request: { url: "cron" }, auth: { user: { id: 1 } } }
+        ).bind(this),
+        delete: deleteWithAudit(
+          self.ctx
+            ? self.ctx
+            : { request: { url: "cron" }, auth: { user: { id: 1 } } }
+        ).bind(this)
       };
     };
   }
