@@ -131,6 +131,7 @@ function updateWithAudit({ request, auth }) {
  */
 function updateWithAuditCron() {
   return async function(data, ignoreDiff = ["updated_at"]) {
+    consolee.log("yo");
     const auditable = this.constructor.name;
     const auditableId = this.id;
     const oldData = this.$originalAttributes;
