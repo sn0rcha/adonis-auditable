@@ -9,8 +9,7 @@ class Auditable {
     const self = this;
     Model.audit = function() {
       return {
-        create: createWithAudit(self.ctx).bind(this),
-        createCron: createWithAuditCron().bind(this)
+        create: createWithAudit(self.ctx).bind(this)
       };
     };
 
@@ -18,9 +17,7 @@ class Auditable {
     Model.prototype.audit = function() {
       return {
         update: updateWithAudit(self.ctx).bind(this),
-        updateCron: updateWithAuditCron().bind(this),
-        delete: deleteWithAudit(self.ctx).bind(this),
-        deleteCron: deleteWithAuditCron().bind(this)
+        delete: deleteWithAudit(self.ctx).bind(this)
       };
     };
   }
@@ -51,29 +48,6 @@ function createWithAudit({ request, auth }) {
       null,
       newData
     );
-
-    return model;
-  };
-}
-
-/**
- * Create with audit CRON
- *
- * @param auth
- * @param request
- * @returns {*}
- */
-function createWithAuditCron() {
-  return async function(data) {
-    const model = await this.create(data);
-    const newModel = await this.find(model.primaryKeyValue);
-    const auditable = newModel.constructor.name;
-    const auditableId = newModel.id;
-    const newData = newModel.$attributes;
-    const event = Audit.events.CREATE;
-
-    // save audit
-    await createAuditCron(event, auditable, auditableId, null, newData);
 
     return model;
   };
@@ -123,43 +97,6 @@ function updateWithAudit({ request, auth }) {
 }
 
 /**
- * Update with audit CRON
- *
- * @param auth
- * @param request
- * @returns {*}
- */
-function updateWithAuditCron() {
-  return async function(data, ignoreDiff = ["updated_at"]) {
-    consolee.log("yo");
-    const auditable = this.constructor.name;
-    const auditableId = this.id;
-    const oldData = this.$originalAttributes;
-    this.merge(data);
-    const result = await this.save();
-    const newModel = await this.constructor.find(this.primaryKeyValue);
-    const newData = newModel.$attributes;
-
-    // if new and old are equal then don't bother updating
-    const isEqual = _.isEqual(
-      _.omit(newData, ignoreDiff),
-      _.omit(oldData, ignoreDiff)
-    );
-    if (isEqual) {
-      return result;
-    }
-
-    // update / patch are shared
-    const event = Audit.events.UPDATE;
-
-    // save audit
-    await createAuditCron(event, auditable, auditableId, oldData, newData);
-
-    return result;
-  };
-}
-
-/**
  * Delete with audit
  *
  * @param auth
@@ -181,27 +118,6 @@ function deleteWithAudit({ request, auth }) {
       auditableId,
       oldData
     );
-
-    return result;
-  };
-}
-
-/**
- * Delete with audit CRON
- *
- * @param auth
- * @param request
- * @returns {*}
- */
-function deleteWithAuditCron() {
-  return async function() {
-    const auditable = this.constructor.name;
-    const auditableId = this.id;
-    const oldData = this.$originalAttributes;
-    const result = await this.delete();
-
-    // save audit
-    await createAudit(Audit.events.DELETE, auditable, auditableId, oldData);
 
     return result;
   };
@@ -245,38 +161,6 @@ async function createAudit(
     event,
     url,
     ip,
-    old_data: oldData,
-    new_data: newData
-  });
-}
-
-/**
- * Run the audit CRON
- *
- * @param event
- * @param oldData
- * @param auditable
- * @param auditableId
- * @param newData
- * @param auth
- * @param request
- * @returns {Promise<void>}
- */
-async function createAuditCron(
-  event,
-  auditable,
-  auditableId,
-  oldData,
-  newData
-) {
-  // save audit
-  await Audit.create({
-    user_id: userId,
-    auditable_id: auditableId,
-    auditable,
-    event,
-    url: "cron",
-    ip: "cron",
     old_data: oldData,
     new_data: newData
   });
