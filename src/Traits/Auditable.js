@@ -7,29 +7,32 @@ class Auditable {
   register(Model) {
     // create methods
     const self = this;
+    const defaultCtx = {
+      request: {
+        originalUrl: () => {
+          return "cron";
+        },
+        ip: () => {
+          return "cron";
+        }
+      },
+      auth: {
+        user: {
+          id: 1
+        }
+      }
+    };
     Model.audit = function() {
       return {
-        create: createWithAudit(
-          self.ctx
-            ? self.ctx
-            : { request: { url: "cron" }, auth: { user: { id: 1 } } }
-        ).bind(this)
+        create: createWithAudit(self.ctx ? self.ctx : defaultCtx).bind(this)
       };
     };
 
     // update/delete methods
     Model.prototype.audit = function() {
       return {
-        update: updateWithAudit(
-          self.ctx
-            ? self.ctx
-            : { request: { url: "cron" }, auth: { user: { id: 1 } } }
-        ).bind(this),
-        delete: deleteWithAudit(
-          self.ctx
-            ? self.ctx
-            : { request: { url: "cron" }, auth: { user: { id: 1 } } }
-        ).bind(this)
+        update: updateWithAudit(self.ctx ? self.ctx : defaultCtx).bind(this),
+        delete: deleteWithAudit(self.ctx ? self.ctx : defaultCtx).bind(this)
       };
     };
   }
